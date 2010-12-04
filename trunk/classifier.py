@@ -22,3 +22,4 @@ def distance(vec1, vec2, metric=EUCLIDEAN):
         return "NOT YET IMPLEMENTED"
     else:
         return "Please choose as valid value for the metric"
+
