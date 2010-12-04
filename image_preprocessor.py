@@ -18,19 +18,19 @@ def allow_file(filename):
 def batch_image_process(directory):
     """
         Args: a directory containing images
-        Returns: A list containing a vector for every image in the 
+        Returns: A list containing a vector for every image in the
                  input directory
     """
     files = listdir(directory)
     image_vectors = []
-    
+
     for file in files:
         if allow_file(file):
             vector = vectorize_image(directory + '/' + file)
             image_vectors.append(vector)
-            
+
     return image_vectors
-    
+
 def vectorize_image(file_path):
     """
         Args: The path to an image file on disk
@@ -39,4 +39,4 @@ def vectorize_image(file_path):
     image = Image.open(file_path)
     matrix = numpy.array(image)
     return matrix.flatten()
-    
+
