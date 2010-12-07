@@ -22,7 +22,6 @@ class PCA_Classifier:
         for i in face_classes:
             self.eigenfaces[i] = pca(self.face_classes[i])
 
-
     def batch_image_process(self, directory, label):
         """
             Args: a directory containing images
