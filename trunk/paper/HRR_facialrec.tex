@@ -24,7 +24,7 @@ Alex Ruch \\ Pomona College}
 \nocopyright
 \maketitle
 \begin{abstract}
-Facial recognition is an important area of research of computer science with obvious implications. As one would imagine, it is not a simple task.  A large number of variables come into play including facial expressions, hairstyles, camera angle, and lighting. Our paper in particular examines Principal Component Analysis (PCA).  This method of facial recogniiton is sensitive to variations of the images, so we used face databases that attempted to minimizae these differences. Our results were FILL IN RESULTS. 
+Facial recognition is an important area of research of computer science with obvious implications. As one would imagine, it is not a simple task.  A large number of variables come into play including facial expressions, hairstyles, camera angle, and lighting. Our paper in particular examines Principal Component Analysis (PCA).  This method of facial recogniiton is sensitive to variations of the images. We used databases that contained faces in standard position, with different lighting, and with different face angles, and as expected, our results confirmed that the PCA algorithm performed worse on the images with different lighting and angles.
 \end{abstract}
 \section{Introduction}
 Facial recognition is a varied area of study with applications to security, biometrics, and personal use.  In terms of security, one could imagine a situation where an authority has a database of images of faces and security footage of a criminal.  It is rarely feasible to manually comb through a database, but a sophisitcated enough facial recogniiton system could possibly determine the identity of the criminal.  In biometrics, using a camera to confirm a subject's identity is cheaper than a fingerprint reader or an iris scanner, and is more convenient than having to manually enter a password.  The personal uses of facial recognition include training some images of a photo album based on user-based tags and then automatically tagging any new photos with known people.
@@ -35,5 +35,103 @@ One of the challenges of facial recognition is the extraordinarly large space of
 \section{Algorithm}
 The PCA Algorithm begins by taking a two-dimensional matrix representing the image and flattening it into a long one-dimensional vector.  Each vector is then mean-centered.  The algorithm then finds the set of orthonormal vectors which has the largest projection onto the mean-centered vectors. These vectors are given by the eigenvectors of the covariance matrix of $WW^T$, where $W$ is the matrix of the column vectors of the mean-centered images placed next to each other.  The eigenvectors corresponding to the largest eigenvalues will produce the greatest variance.  To classify an image, we project the image onto a selected number of eigenvectors with the largest eigenvalues and then find the distance (Euclidean, Manhattan, or otherwise) to each face class to see which one most closely resembles the image.
 \section{Results}
+Expectedly, there was a substantial decrease in performance when images were used that altered lighting or face angles.
+% use ~\ref{standard} to refer to this table number
+\begin{table}
+\caption{Standard}
+\begin{center}
+\label{standard}
+\begin {tabular} {|c|c|c|c|}
+\hline
+& \textrm{Precision} & \textrm{Recall} & \textrm{f1}\\
+\hline
+Face 1 &  &  &  \\
+\hline
+Face 2 &  &  &  \\
+\hline
+Face 3 &  &  &  \\
+\hline
+Face 4 &  &  &  \\
+\hline
+Face 5 &  &  &  \\
+\hline
+Face 6 &  &  &  \\
+\hline
+Face 7 &  &  &  \\
+\hline
+Face 8 &  &  &  \\
+\hline
+Face 9 &  &  &  \\
+\hline
+Face 10 &  &  &  \\
+\hline
+\end {tabular}
+\end{center}
+\end{table}
+% use ~\ref{lighting} to refer to this table number
+\begin{table}
+\caption{Lighting}
+\begin{center}
+\label{lighting}
+\begin {tabular} {|c|c|c|c|}
+\hline
+& \textrm{Precision} & \textrm{Recall} & \textrm{f1}\\
+\hline
+Face 1 &  &  &  \\
+\hline
+Face 2 &  &  &  \\
+\hline
+Face 3 &  &  &  \\
+\hline
+Face 4 &  &  &  \\
+\hline
+Face 5 &  &  &  \\
+\hline
+Face 6 &  &  &  \\
+\hline
+Face 7 &  &  &  \\
+\hline
+Face 8 &  &  &  \\
+\hline
+Face 9 &  &  &  \\
+\hline
+Face 10 &  &  &  \\
+\hline
+\end {tabular}
+\end{center}
+\end{table}
+% use ~\ref{angles} to refer to this table number
+\begin{table}
+\caption{Face Angles}
+\begin{center}
+\label{angles}
+\begin {tabular} {|c|c|c|c|}
+\hline
+& \textrm{Precision} & \textrm{Recall} & \textrm{f1}\\
+\hline
+Face 1 &  &  &  \\
+\hline
+Face 2 &  &  &  \\
+\hline
+Face 3 &  &  &  \\
+\hline
+Face 4 &  &  &  \\
+\hline
+Face 5 &  &  &  \\
+\hline
+Face 6 &  &  &  \\
+\hline
+Face 7 &  &  &  \\
+\hline
+Face 8 &  &  &  \\
+\hline
+Face 9 &  &  &  \\
+\hline
+Face 10 &  &  &  \\
+\hline
+\end {tabular}
+\end{center}
+\end{table}
 \section{Conclusion}
+As our results showed, facial recognition still has a ways to go. Possible areas for further research include testing how well the algorithm performs on other variations of images.  In the real world, people will not all be facing the camera in the same way with the same lighting.  Therefore, PCA is not suitable for general-purpose use, but it still can be used in controlled environments.  There are other facial recognition systems that can better handle these variations in images, yet even the best ones have some deficiencies, whther it be accuracy, time, or space.  Facial recognition is a still-evolving field facing numerous challenges, but it has continued to improve over the years, and hopefully will get better well into the future.
 \end{document}
