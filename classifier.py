@@ -132,7 +132,7 @@ def label_face(training_groups, new_face, distance_metric, eigenfaces, mean_face
     min_group = ""
     min_distance = INFINITY
     for group, weight in group_weights.iteritems():
-        d = distance(weight, new_weight)
+        d = distance(weight, new_weight, distance_metric)
         if d < min_distance:
             min_group = group
             min_distance = distance
