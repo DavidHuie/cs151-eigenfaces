@@ -4,8 +4,9 @@ import scipy.spatial.distance as scid
 from PIL import Image
 from os import listdir
 from mdp import pca
+import re
 
-ALLOWED_EXT = ['jpeg', 'gif', 'jpg']
+ALLOWED_EXT = ['jpeg', 'gif', 'jpg', 'pgm']
 
 # constants for various metrics
 EUCLIDEAN = 0
@@ -19,9 +20,27 @@ class PCA_Classifier:
         self.eigenfaces = {}
         
     def train(self):
-        for i in face_classes:
-            self.eigenfaces[i] = pca(self.face_classes[i])
+        
+        for i in self.face_classes:
+            self.eigenfaces[i] = pca(numpy.array(self.face_classes[i]).astype('f'))
 
+    
+    def print_face_classes(self):
+        print self.face_classes
+
+    def batch_label_process(self, directory):
+        print len(self.face_classes)
+        """
+        Args: a directory containing folders with images
+        Returns: Nothing
+        """
+        files = listdir(directory)
+        for file in files:
+            if re.match("\w+", file):
+                self.batch_image_process(directory + '/' + file, file)
+        print len(self.face_classes)
+
+        
     def batch_image_process(self, directory, label):
         """
             Args: a directory containing images
@@ -32,12 +51,30 @@ class PCA_Classifier:
         image_vectors = []
 
         for file in files:
+            if self.allow_file(file):
+                vector = self.vectorize_image(directory + '/' + file)
+                image_vectors.append(vector)
+
+        print image_vectors
+                
+        self.face_classes[label] = image_vectors
+        
+    def batch_image_process1(self, directory, label):
+        """
+        Args: a directory containing images
+        Returns: A list containing a vector for every image in the
+        input directory
+        """
+        files = listdir(directory)
+        image_vectors = []
+        
+        for file in files:
             if allow_file(file):
                 vector = self.vectorize_image(directory + '/' + file)
                 image_vectors.append(vector)
                 
         self.face_classes[label] = image_vectors
-
+                
     def vectorize_image(self, file_path):
         """
             Args: The path to an image file on disk
