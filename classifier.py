@@ -18,25 +18,47 @@ class PCA_Classifier:
     def __init__(self):
         self.mean_vector = None
         self.face_classes = {}
-        self.eigenfaces = {}
+        self.eigenfaces = []
+        self.big = None
 
     def train(self):
-        self.eigenfaces = pca(numpy.vstack([numpy.array(m).astype('f') for m in face_classes]), svd = True, output_dim = 10))
+        imList = []
+        for cl in self.face_classes.itervalues():
+            for im in cl:
+                imList.append(im)
+
+        # makes the images be column vectors, I think this may be the right
+        # way but it was taking way too long to run and way too much
+        # hard drive space, even on only two folders
+        # self.big = array(numpy.hstack(numpy.matrix(imList).transpose().astype('f')))
+        # self.mean_vector = numpy.mean(bigMat, 1)
+
+
+        self.big = numpy.vstack(array(imList).astype('f'))
+        self.mean_vector = numpy.mean(self.big, 0)
+        self.eigenfaces = pca(self.big, svd = True, output_dim = 10)
 
 
     def save_eigenfaces(self, filename):
         with open(filename,'w') as f:
-            pickle.dump(self.eigenfaces, f)
+            p = pickle.Pickler(f)
+            p.dump(self.eigenfaces)
+            p.dump(self.big)
+            p.dump(self.mean_vector)
+            p.dump(self.face_classes)
 
     def load_eigenfaces(self, filename):
         with open(filename, 'r') as f:
-            self.eigenfaces = pickle.load(f)
+            u = pickle.Unpickler(f)
+            self.eigenfaces = u.load()
+            self.big = u.load()
+            self.mean_vector = u.load()
+            self.face_classes = u.load()
 
     def print_face_classes(self):
         print self.face_classes
 
     def batch_label_process(self, directory):
-        print len(self.face_classes)
         """
         Args: a directory containing folders with images
         Returns: Nothing
@@ -45,7 +67,6 @@ class PCA_Classifier:
         for file in files:
             if re.match("\w+", file):
                 self.batch_image_process(directory + '/' + file, file)
-        print len(self.face_classes)
 
 
     def batch_image_process(self, directory, label):
@@ -59,11 +80,11 @@ class PCA_Classifier:
 
         for file in files:
             if self.allow_file(file):
-                print file
+                #print file
                 vector = self.vectorize_image(directory + '/' + file)
                 image_vectors.append(vector)
 
-        print image_vectors
+        #print image_vectors
 
         self.face_classes[label] = image_vectors
 
@@ -91,8 +112,6 @@ class PCA_Classifier:
                 return True
         return False
 
-    def calculate_mean_image(self):
-        pass
 
     def distance(self, vec1, vec2, metric=EUCLIDEAN):
         '''
