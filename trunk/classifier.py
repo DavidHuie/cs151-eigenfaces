@@ -19,16 +19,15 @@ class PCA_Classifier:
         self.mean_vector = None
         self.face_classes = {}
         self.eigenfaces = {}
-        
+
     def train(self):
-        
-        for i in self.face_classes:
-            self.eigenfaces[i] = pca(numpy.array(self.face_classes[i]).astype('f'), svd = True, output_dim = 10)
+        self.eigenfaces = pca(numpy.vstack([numpy.array(m).astype('f') for m in face_classes]), svd = True, output_dim = 10))
+
 
     def save_eigenfaces(self, filename):
         with open(filename,'w') as f:
             pickle.dump(self.eigenfaces, f)
-            
+
     def load_eigenfaces(self, filename):
         with open(filename, 'r') as f:
             self.eigenfaces = pickle.load(f)
@@ -48,7 +47,7 @@ class PCA_Classifier:
                 self.batch_image_process(directory + '/' + file, file)
         print len(self.face_classes)
 
-        
+
     def batch_image_process(self, directory, label):
         """
             Args: a directory containing images
@@ -65,10 +64,10 @@ class PCA_Classifier:
                 image_vectors.append(vector)
 
         print image_vectors
-                
+
         self.face_classes[label] = image_vectors
-    
-                
+
+
     def vectorize_image(self, file_path):
         """
             Args: The path to an image file on disk
@@ -78,7 +77,7 @@ class PCA_Classifier:
         image = image.resize((60, 45))
         matrix = numpy.array(image)
         return matrix.flatten()
-        
+
     def allow_file(self, filename):
         """
             Args: A filename
@@ -91,10 +90,10 @@ class PCA_Classifier:
             if filename.endswith(ext):
                 return True
         return False
-        
+
     def calculate_mean_image(self):
         pass
-        
+
     def distance(self, vec1, vec2, metric=EUCLIDEAN):
         '''
             Args: two vectors to be compared and metric to be used
@@ -123,7 +122,7 @@ class PCA_Classifier:
             weight = numpy.dot(eigenface, normed_face)
             weight_vector.append(weight)
         return numpy.array(weight_vector)
-        
+
 
     def calc_group_weights(self, group_dict, eigenfaces, mean_face):
         '''
@@ -131,10 +130,10 @@ class PCA_Classifier:
         a vector of eigenfaces and a vector containing the mean face
         Returns a dictionary in the form {face_group_label -> group_weight_vector}
         '''
-    
+
         weight_dict = dict()
         for label, group in group_dict.iteritems():
-        
+
             group_face = 0 * group[0]
             for face in group:
                 group_face += face
@@ -161,7 +160,7 @@ class PCA_Classifier:
         a vector of eigenfaces and the mean face
         Returns the most likely label for the face
         '''
-    
+
         group_weights = calc_group_weights(training_groups, eigenfaes, mean_face)
         new_weight = project_to_face_space(new_face, eigenfaces, mean_face)
         face_threshold = 0.0
@@ -179,4 +178,4 @@ class PCA_Classifier:
             return "new face"
         else:
             return min_group
-    
+
