@@ -22,20 +22,31 @@ class PCA_Classifier:
         self.big = None
 
     def train(self):
+        '''
+        uses images as rows
+        '''
         imList = []
         for cl in self.face_classes.itervalues():
             for im in cl:
                 imList.append(im)
 
-        # makes the images be column vectors, I think this may be the right
-        # way but it was taking way too long to run and way too much
-        # hard drive space, even on only two folders
-        # self.big = array(numpy.hstack(numpy.matrix(imList).transpose().astype('f')))
-        # self.mean_vector = numpy.mean(bigMat, 1)
-
 
         self.big = numpy.vstack(array(imList).astype('f'))
         self.mean_vector = numpy.mean(self.big, 0)
+        self.eigenfaces = pca(self.big, svd = True, output_dim = 10)
+
+    def train2(self):
+        '''
+        uses images as columns
+        '''
+        imList = []
+        for cl in self.face_classes.itervalues():
+            for im in cl:
+                imList.append(im)
+
+        self.big = array(numpy.hstack(numpy.matrix(imList).transpose().astype('f')))
+        self.mean_vector = numpy.mean(bigMat, 1)
+
         self.eigenfaces = pca(self.big, svd = True, output_dim = 10)
 
 
