@@ -45,8 +45,7 @@ class PCA_Classifier:
                 imList.append(im)
 
         self.big = array(numpy.hstack(numpy.matrix(imList).transpose().astype('f')))
-        self.mean_vector = numpy.mean(bigMat, 1)
-
+        self.mean_vector = numpy.mean(self.big, 1)
         self.eigenfaces = pca(self.big, svd = True, output_dim = 10)
 
 
