@@ -92,6 +92,9 @@ class PCA_Classifier:
                 return True
         return False
         
+    def calculate_mean_image(self):
+        pass
+        
     def distance(self, vec1, vec2, metric=EUCLIDEAN):
         '''
             Args: two vectors to be compared and metric to be used
