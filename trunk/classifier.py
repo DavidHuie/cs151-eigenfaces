@@ -14,6 +14,9 @@ EUCLIDEAN = 0
 MANHATTAN = 1
 MAHALANOBIS = 2
 
+# sleeping eight
+INFINITY = 1e40
+
 class PCA_Classifier:
     def __init__(self):
         self.mean_vector = None
@@ -23,20 +26,39 @@ class PCA_Classifier:
 
     def train(self):
         '''
+        uses images as rows
+        '''
+        imList = []
+        for cl in self.face_classes.itervalues():
+            for im in cl:
+                imList.append(im)
+                
+       # print imList
+        self.big = numpy.vstack(array(imList).astype('f'))
+        print len(self.big)
+        print len(self.big[0])
+        #print self.big
+        self.mean_vector = numpy.mean(self.big, 0)
+        self.eigenfaces = pca(self.big, svd = True)
+        #print self.eigenfaces
+
+    def train2(self):
+        '''
         uses images as columns
         '''
         imList = []
         for cl in self.face_classes.itervalues():
             for im in cl:
-                imList.append(numpy.matrix(im).transpose())
-        print imList
+                imList.append(im)
 
-        self.big = numpy.hstack(array(imList).astype('f'))
-        self.mean_vector = numpy.mean(self.big, 1)
-        self.eigenfaces = pca(self.big, svd = True, output_dim = 10)
+        #self.big = array(numpy.hstack(numpy.matrix(imList).transpose().astype('f')))
+        self.big = numpy.vstack(array(imList).astype('f'))
+        self.mean_vector = numpy.mean(self.big, 0)
+        self.eigenfaces = numpy.transpose(pca(numpy.transpose(self.big), 
+                                              svd = True))
 
 
-    def save_vars(self, filename):
+    def save_eigenfaces(self, filename):
         with open(filename,'w') as f:
             p = pickle.Pickler(f)
             p.dump(self.eigenfaces)
@@ -44,7 +66,7 @@ class PCA_Classifier:
             p.dump(self.mean_vector)
             p.dump(self.face_classes)
 
-    def load_vars(self, filename):
+    def load_eigenfaces(self, filename):
         with open(filename, 'r') as f:
             u = pickle.Unpickler(f)
             self.eigenfaces = u.load()
@@ -127,20 +149,20 @@ class PCA_Classifier:
         else:
             return "Please choose as valid value for the metric"
 
-    def calc_weight_vector(self, normed_face, eigenfaces):
+    def calc_weight_vector(self, normed_face):
         '''
         Takes a normalized face (face minus the average face) and an array
         of eigenfaces
         Returns a weight vector for the face.
         '''
         weight_vector = list()
-        for eigenface in eigenfaces:
+        for eigenface in self.eigenfaces:
             weight = numpy.dot(eigenface, normed_face)
             weight_vector.append(weight)
         return numpy.array(weight_vector)
 
 
-    def calc_group_weights(self, group_dict, eigenfaces, mean_face):
+    def calc_group_weights(self):
         '''
         Takes a dictionary in the form of {face_group_label -> group_image_vectors}
         a vector of eigenfaces and a vector containing the mean face
@@ -148,49 +170,65 @@ class PCA_Classifier:
         '''
 
         weight_dict = dict()
-        for label, group in group_dict.iteritems():
+        for label, group in self.face_classes.iteritems():
 
             group_face = 0 * group[0]
             for face in group:
                 group_face += face
             group_face /= len(group)
-            normed_group_face = group_face - mean_face
+            normed_group_face = group_face - self.mean_vector
 
-            weight_vector = calc_weight_vector(normed_group_face, eigenfaces)
+            weight_vector = self.calc_weight_vector(normed_group_face)
 
             weight_dict[label] = weight_vector
 
         return weight_dict
 
-    def project_to_face_space(self, new_face, eigenfaces, mean_face):
+    def project_to_face_space(self, new_face):
         '''
         Takes a face vector, eigenfaces, and the mean face
         Returns the weight vector for the new face
         '''
-        normed_face = new_face - mean_face
-        return calc_weight_vector(normed_face, eigenfaces)
+        normed_face = new_face - self.mean_vector
+        return self.calc_weight_vector(normed_face)
 
-    def label_face(self, training_groups, new_face, distance_metric, eigenfaces, mean_face):
+    def label_face(self, new_face, distance_metric):
         '''
         Takes a dictionary of labels -> images, a new face, a distance metric,
         a vector of eigenfaces and the mean face
         Returns the most likely label for the face
         '''
 
-        group_weights = calc_group_weights(training_groups, eigenfaes, mean_face)
-        new_weight = project_to_face_space(new_face, eigenfaces, mean_face)
+        group_weights = self.calc_group_weights()
+        new_weight = self.project_to_face_space(new_face)
         face_threshold = 0.0
         new_face_threshold = 0.0
         min_group = ""
         min_distance = INFINITY
         for group, weight in group_weights.iteritems():
-            d = distance(weight, new_weight, distance_metric)
+            d = self.distance(weight, new_weight, distance_metric)
             if d < min_distance:
                 min_group = group
-                min_distance = distance
+                min_distance = d
         if min_distance < face_threshold:
             return "not a face"
         elif min_distance < new_face_threshold:
             return "new face"
         else:
             return min_group
+
+    def test_classifier(self, directory, metric):
+        files = listdir(directory)
+        correct = 0
+        total = 0
+        for file in files:
+            if re.match("\w+", file):
+                face = self.vectorize_image(directory + '/' + file)
+                label = self.label_face(face, metric)
+                start = re.search("\d\d", file).start()
+                actual_label = str(file[start:start+2])
+                if label == actual_label:
+                    correct +=1
+                total += 1
+        print correct
+        print total
