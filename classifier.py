@@ -23,33 +23,20 @@ class PCA_Classifier:
 
     def train(self):
         '''
-        uses images as rows
-        '''
-        imList = []
-        for cl in self.face_classes.itervalues():
-            for im in cl:
-                imList.append(im)
-
-
-        self.big = numpy.vstack(array(imList).astype('f'))
-        self.mean_vector = numpy.mean(self.big, 0)
-        self.eigenfaces = pca(self.big, svd = True, output_dim = 10)
-
-    def train2(self):
-        '''
         uses images as columns
         '''
         imList = []
         for cl in self.face_classes.itervalues():
             for im in cl:
-                imList.append(im)
+                imList.append(numpy.matrix(im).transpose())
+        print imList
 
-        self.big = array(numpy.hstack(numpy.matrix(imList).transpose().astype('f')))
+        self.big = numpy.hstack(array(imList).astype('f'))
         self.mean_vector = numpy.mean(self.big, 1)
         self.eigenfaces = pca(self.big, svd = True, output_dim = 10)
 
 
-    def save_eigenfaces(self, filename):
+    def save_vars(self, filename):
         with open(filename,'w') as f:
             p = pickle.Pickler(f)
             p.dump(self.eigenfaces)
@@ -57,7 +44,7 @@ class PCA_Classifier:
             p.dump(self.mean_vector)
             p.dump(self.face_classes)
 
-    def load_eigenfaces(self, filename):
+    def load_vars(self, filename):
         with open(filename, 'r') as f:
             u = pickle.Unpickler(f)
             self.eigenfaces = u.load()
@@ -207,4 +194,3 @@ class PCA_Classifier:
             return "new face"
         else:
             return min_group
-
