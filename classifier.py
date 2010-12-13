@@ -34,7 +34,7 @@ class PCA_Classifier:
                 imList.append(im)
                 
        # print imList
-        self.big = numpy.vstack(array(imList).astype('f'))
+        self.big = numpy.vstack(array(imList).astype('float64'))
         print len(self.big)
         print len(self.big[0])
         #print self.big
@@ -52,10 +52,12 @@ class PCA_Classifier:
                 imList.append(im)
 
         #self.big = array(numpy.hstack(numpy.matrix(imList).transpose().astype('f')))
-        self.big = numpy.vstack(array(imList).astype('f'))
+        self.big = numpy.vstack(array(imList).astype('float64'))
         self.mean_vector = numpy.mean(self.big, 0)
-        self.eigenfaces = numpy.transpose(pca(numpy.transpose(self.big), 
-                                              svd = True))
+        mean_matrix = numpy.array([self.mean_vector]*len(self.big))
+        big = self.big - mean_matrix
+        self.eigenfaces = numpy.transpose(pca(numpy.transpose(big), 
+                                              svd = True, output_dim = 10))
 
 
     def save_eigenfaces(self, filename):
@@ -114,7 +116,6 @@ class PCA_Classifier:
             Returns: A one-dimensional numpy array of the image
         """
         image = Image.open(file_path)
-        image = image.resize((60, 45))
         matrix = numpy.array(image)
         return matrix.flatten()
 
@@ -225,8 +226,8 @@ class PCA_Classifier:
             if re.match("\w+", file):
                 face = self.vectorize_image(directory + '/' + file)
                 label = self.label_face(face, metric)
-                start = re.search("\d\d", file).start()
-                actual_label = str(file[start:start+2])
+                match = re.search("[1-9][0-9]*", file)
+                actual_label = str(file[match.start():match.end()])
                 if label == actual_label:
                     correct +=1
                 total += 1
