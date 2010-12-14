@@ -7,12 +7,12 @@ from mdp import pca
 import re
 import pickle
 
-ALLOWED_EXT = ['gif','pgm']
-
 # constants for various metrics
 EUCLIDEAN = 0
 MANHATTAN = 1
 MAHALANOBIS = 2
+
+SIZE = (60, 90)
 
 # sleeping eight
 INFINITY = 1e40
@@ -108,14 +108,13 @@ class PCA_Classifier:
         #print image_vectors
 
         self.face_classes[label] = image_vectors
-
-
+    
     def vectorize_image(self, file_path):
         """
             Args: The path to an image file on disk
             Returns: A one-dimensional numpy array of the image
         """
-        image = Image.open(file_path)
+        image = Image.open(file_path).resize(SIZE)
         matrix = numpy.array(image)
         return matrix.flatten()
 
@@ -126,9 +125,6 @@ class PCA_Classifier:
                      False otherwise.
         """
         if re.match("\w+", filename):
-                return True
-        for ext in ALLOWED_EXT:
-            if filename.endswith(ext):
                 return True
         return False
 
