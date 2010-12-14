@@ -6,6 +6,7 @@ from os import listdir
 from mdp import pca
 import re
 import pickle
+import shutil
 
 # constants for various metrics
 EUCLIDEAN = 0
@@ -56,8 +57,11 @@ class PCA_Classifier:
         self.mean_vector = numpy.mean(self.big, 0)
         mean_matrix = numpy.array([self.mean_vector]*len(self.big))
         big = self.big - mean_matrix
+        print len(big)
+        print len(big[0])
         self.eigenfaces = numpy.transpose(pca(numpy.transpose(big), 
                                               svd = True, output_dim = 10))
+        print self.mean_vector
 
 
     def save_eigenfaces(self, filename):
@@ -89,6 +93,21 @@ class PCA_Classifier:
             if re.match("\w+", file):
                 self.batch_image_process(directory + '/' + file, file)
 
+    def batch_label_process2(self, directory):
+        """
+        Args: a directory containing folders with images
+        Returns: Nothing
+        """
+        files = listdir(directory)
+        for file in files:
+            if re.match("\w+", file):
+                match = re.search("[1-9][0-9]*", file)
+                label = str(file[match.start():match.end()])
+                vector = self.vectorize_image(directory + '/' + file)
+                if label in self.face_classes:
+                    self.face_classes[label].append(vector)
+                else:
+                    self.face_classes[label] = [vector]
 
     def batch_image_process(self, directory, label):
         """
@@ -186,6 +205,9 @@ class PCA_Classifier:
         Takes a face vector, eigenfaces, and the mean face
         Returns the weight vector for the new face
         '''
+
+        print len(new_face)
+        print len(self.mean_vector)
         normed_face = new_face - self.mean_vector
         return self.calc_weight_vector(normed_face)
 
@@ -229,3 +251,26 @@ class PCA_Classifier:
                 total += 1
         print correct
         print total
+
+def partition_test_train(directory):
+    # calc number of images in directory
+    length = 0
+    files = listdir(directory)
+    for file in files:
+        if re.match("\w+", file) and file != 'test' and file != 'train':
+            length += 1
+    test_indexes = []
+    while len(test_indexes) <(length*.2):
+        x = random.randrange(0, length)
+        if not(x in test_indexes):
+            test_indexes.append(x)
+    i = 0
+    for file in files:
+        if re.match("\w+", file) and file != 'test' and file != 'train':
+            if i in test_indexes:
+                shutil.move(directory + '/' + file,  directory + '/' + 'test')
+            else:
+                shutil.move(directory + '/' + file,  directory + '/' + 'train')
+        i += 1
+                
+    
