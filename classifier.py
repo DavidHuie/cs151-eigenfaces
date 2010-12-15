@@ -122,15 +122,8 @@ class PCA_Classifier:
             Returns: A one-dimensional numpy array of the image
         """
         image = Image.open(file_path)
-        
-        # Determine dimensions
-        if self.input_image_dimensions is None:
-            self.input_image_dimensions = (image.size[1], image.size[0])
-            print "Image dimensions:", self.input_image_dimensions
-            
-        # Make matrix one-dimensional
-        vector = numpy.array(image).flatten()
-        return vector
+        matrix = numpy.array(image)
+        return matrix.flatten()
 
     def allow_file(self, filename):
         """
@@ -302,21 +295,19 @@ class PCA_Classifier:
         fn = 0
         
         for label in labels:
-            total += stats[label]['total']
-            tp += stats[label]['tp']
-            fp += stats[label]['fp']
-            fn += stats[label]['fn']
-            
-        # Print out stats
-        p = 1.0*tp/(tp+fp)
-        r = 1.0*tp/(tp+fn)
-        f = 2 * (p*r)/(p+r)
-        print "Total Images:", total
-        print "Precision:", p
-        print "Recall:", r
-        print "F-measure:", f
+            tp = stats[label]['tp']
+            fp = stats[label]['fp']
+            fn = stats[label]['fn']
+            if tp+fp>0 and tp+fn>0:
+                print label
+                # Print out stats
+                p = 1.0*tp/(tp+fp)
+                r = 1.0*tp/(tp+fn)
+                f = 2 * (p*r)/(p+r)
+                print "Precision:", p
+                print "Recall:", r
+                print "F-measure:", f
                 
-
 def partition_test_train(directory):
     # calc number of images in directory
     length = 0
@@ -339,8 +330,10 @@ def partition_test_train(directory):
         i += 1
                 
 x = PCA_Classifier()
-x.batch_label_process('yalefaces/train')
+print "getting training images..."
+x.batch_label_process('yalefacesB/train')
+print "training..."
 x.train()
-x.classify('yalefaces/test', EUCLIDEAN)
-x.save_eigenface_images('efaces')
+print "classifying..."
+x.test_classifier('yalefacesB/test', EUCLIDEAN)
     
