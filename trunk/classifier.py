@@ -15,7 +15,7 @@ MANHATTAN = 1
 MAHALANOBIS = 2
 
 # sleeping eight
-INFINITY = 1e40
+INFINITY = float('infinity')
 
 class PCA_Classifier:
     def __init__(self):
@@ -29,6 +29,7 @@ class PCA_Classifier:
         '''
         uses images as columns
         '''
+        print "Training classifier using face classes..."
         imList = []
         for cl in self.face_classes.itervalues():
             for im in cl:
@@ -245,6 +246,7 @@ class PCA_Classifier:
             
         Prints out statistics about the testing set (precision, recall, f)
         """
+        print "Classifying images..."
         stats = {}
         labels = set([])
         files = listdir(directory)
