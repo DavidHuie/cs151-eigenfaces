@@ -77,20 +77,22 @@ person represented by $v_t$ would be identified as the person in the
 image $v_i$.
 
 \section{Results}
-The unmodified Yale Database contained images with varying facial expressions as well as lighting that created shadows that significantly obscured the images.  When trying to classify these images with the shadow, accuracy was low because the region of the shadow made it more similar to other images with the shadow as opposed to an image of an actual face, in particular, the correct person's face. Once we removed the the images with the shadows from the first database, our system classified the face correctly with $>.95$ accuracy during repeated trials.
+To conduct our tests, we randomly partitioned the images into $80\%$ training data and $20\%$ testing data.  The unmodified Yale Database contained images with varying facial expressions as well as lighting that created shadows that significantly obscured the images.  When trying to classify these images with the shadow, accuracy was low because the region of the shadow made it more similar to other images with the shadow as opposed to an image of an actual face, in particular, the correct person's face. Once we removed the the images with the shadows from the first database, our system classified the face correctly with $>.95$ accuracy during repeated trials with random partiions.
 
-Yale Face Database B contained various images of a person under a strobe light.  Once again, our system classified the face correectly with $>.95$ accuracy.  Even though there were lighting variations within the set of images for each person, a test image would be sufficiently close to an image with similar enough lighting that classification was for the most part very successful. 
+Yale Face Database B contained various images of a person under a strobe light.  Once again, our system classified the face correectly with $>.99$ accuracy in repeated trials.  Even though there were lighting variations within the set of images for each person, a test image would be sufficiently close to an image with similar enough lighting that classification was for the most part very successful. 
 
 Precision, recall, and f1 were initially calculated for each of the 15 people in the Yale Database and each of the 10 people in Yale Database B, but this data was statistically insignificant because most entries were $1$ with different faces each trial having values that represented one misclassification. 
 
 \begin{table}
 \begin{center}
-\caption{Results}
+\caption{Results (average of 10 trials)}
 \begin {tabular} {|c|c|c|c|}
 \hline
 & \textrm{Yale} & \textrm{Yale (modified)} & \textrm{Yale B}\\
 \hline
-Accuracy &  &  &  \\
+Average Accuracy & .773  & .955 & .998  \\
+\hline
+Faces tested & 20 & 20  & 130  \\
 \hline
 \end {tabular}
 \end{center}
