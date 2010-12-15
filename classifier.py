@@ -2,7 +2,7 @@ import numpy
 from numpy import array
 import scipy.spatial.distance as scid
 from PIL import Image
-from os import listdir
+from os import listdir, makedirs, path
 from mdp import pca
 import re
 import pickle
@@ -16,6 +16,8 @@ MAHALANOBIS = 2
 
 # sleeping eight
 INFINITY = float('infinity')
+
+SAVE_EXT = '.gif'
 
 class PCA_Classifier:
     def __init__(self):
@@ -40,17 +42,27 @@ class PCA_Classifier:
         self.mean_vector = numpy.mean(self.big, 0)
         mean_matrix = numpy.array([self.mean_vector]*len(self.big))
         big = self.big - mean_matrix
-        unnormed = numpy.transpose(pca(numpy.transpose(big), output_dim = .95, svd = True))
-        self.eigenfaces = [i/numpy.linalg.norm(i) for i in unnormed]
+        self.unnormed_eigenfaces = numpy.transpose(pca(numpy.transpose(big), output_dim = .95, svd = True))
+        self.eigenfaces = [i/numpy.linalg.norm(i) for i in self.unnormed_eigenfaces]
 
-    def display_eigenfaces(self):
+    def save_eigenface_images(self, dir):
         """
         Displays the eigenfaces
         """
-        images = [Image.fromarray(numpy.reshape(i + self.mean_vector, \
-                  self.input_image_dimensions)) for i in self.eigenfaces]
-        for i in images:
-            i.show()
+        print "Saving eigenfaces..."
+        if dir[-1] != '/':
+            dir = dir + '/'
+            
+        if not path.exists(dir):
+            makedirs(dir)
+            
+        images = [Image.fromarray(numpy.reshape(i + self.mean_vector, self.input_image_dimensions)) \
+                  for i in self.unnormed_eigenfaces]
+                  
+        num = len(images)
+        for i in range(1, num + 1):
+            images[i-1].save(dir + 'eigenface' + str(i) + SAVE_EXT)
+
 
     def save_eigenfaces(self, filename):
         with open(filename,'w') as f:
@@ -76,7 +88,7 @@ class PCA_Classifier:
         Args: a directory containing folders with images
         Returns: Nothing
         """
-        print "Labeling and vectorizing images..."
+        print "Labeling and vectorizing training images..."
         files = listdir(directory)
         for file in files:
             if re.match("\w+", file):
@@ -113,7 +125,8 @@ class PCA_Classifier:
         
         # Determine dimensions
         if self.input_image_dimensions is None:
-            self.input_image_dimensions = image.size
+            self.input_image_dimensions = (image.size[1], image.size[0])
+            print "Image dimensions:", self.input_image_dimensions
             
         # Make matrix one-dimensional
         vector = numpy.array(image).flatten()
@@ -326,7 +339,8 @@ def partition_test_train(directory):
         i += 1
                 
 x = PCA_Classifier()
-x.batch_label_process('yalefacesB/train')
+x.batch_label_process('yalefaces/train')
 x.train()
-x.classify('yalefacesB/test', EUCLIDEAN)
+x.classify('yalefaces/test', EUCLIDEAN)
+x.save_eigenface_images('efaces')
     
