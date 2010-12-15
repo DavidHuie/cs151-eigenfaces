@@ -13,14 +13,10 @@ import sys
 # constants for various metrics
 EUCLIDEAN = 0
 MANHATTAN = 1
-MAHALANOBIS = 2
 
-# sleeping eight
-INFINITY = float('infinity')
+EIGENFACE_SAVE_EXT = '.gif'
 
-SAVE_EXT = '.gif'
-
-RESIZE_SIZE = (90, 60)
+RESIZE_SIZE = (120, 90)
 
 TRAIN_PROPORTION = .8
 
@@ -29,6 +25,7 @@ class PCA_Classifier:
         self.mean_vector = None
         self.face_classes = {}
         self.eigenfaces = []
+        self.omega_face_classes = []
         self.big = None
         self.input_image_dimensions = None
         self.resize = resize
@@ -37,9 +34,14 @@ class PCA_Classifier:
 
     def train(self):
         '''
+            Args: None
+            Returns: Nothing
+            
             Trains the classifier using saved face_classes
         '''
+        
         print "Training classifier using face classes..."
+        
         imList = []
         for cl in self.face_classes.itervalues():
             for im in cl:
@@ -51,6 +53,8 @@ class PCA_Classifier:
         big = self.big - mean_matrix
         self.unnormed_eigenfaces = numpy.transpose(pca(numpy.transpose(big), output_dim = .95, svd = True))
         self.eigenfaces = [i/numpy.linalg.norm(i) for i in self.unnormed_eigenfaces]
+        
+        self.calculate_omegas()
 
     def save_eigenface_images(self, dir):
         """
@@ -69,24 +73,7 @@ class PCA_Classifier:
                   
         num = len(images)
         for i in range(1, num + 1):
-            images[i-1].save(dir + 'eigenface' + str(i) + SAVE_EXT)
-
-    def batch_label_process(self, directory):
-        """
-            Args: a directory containing folders with images
-            Returns: Nothing
-        """
-        print "Labeling and vectorizing training images..."
-        files = listdir(directory)
-        for file in files:
-            if re.match("\w+", file):
-                match = re.search("[1-9][0-9]*", file)
-                label = str(file[match.start():match.end()])
-                vector = self.vectorize_image(directory + '/' + file)
-                if label in self.face_classes:
-                    self.face_classes[label].append(vector)
-                else:
-                    self.face_classes[label] = [vector]
+            images[i-1].save(dir + 'eigenface' + str(i) + EIGENFACE_SAVE_EXT)
     
     def vectorize_image(self, file_path):
         """
@@ -104,35 +91,12 @@ class PCA_Classifier:
         matrix = numpy.array(image)
         return matrix.flatten()
 
-    def allow_file(self, filename):
-        """
-            Args: A filename
-            Returns: True if the file specifies an image we can use;
-                     False otherwise.
-        """
-        if re.match("\w+", filename):
-                return True
-        return False
-
-
-    def distance(self, vec1, vec2, metric=EUCLIDEAN):
+    def distance(self, vec1, vec2):
         '''
-            Args: two vectors to be compared and metric to be used
-                0 (default): euclidean
-                1: manhattan
-                2: mahalanobis (not yet implemented)
-            Returns: distance according to given metric
+            Args: two vectors to be compared
+            Returns: Euclidean distance between the input vectors
         '''
-        if metric is EUCLIDEAN:
-            return scid.euclidean(vec1, vec2)
-        elif metric is MANHATTAN:
-            return scid.cityblock(vec1, vec2)
-        elif metric is MAHALANOBIS:
-            print "NOT YET IMPLEMENTED"
-            return 0
-        else:
-            print "Please choose as valid value for the metric"
-            return 0
+        return scid.euclidean(vec1, vec2)
 
     def project_to_face_space(self, new_face):
         '''
@@ -150,7 +114,18 @@ class PCA_Classifier:
             
         return numpy.array(weight_vector)
         
-    def label_face(self, face, distance_metric):
+    def calculate_omegas(self):
+        """
+            Args: None
+            Returns: Nothing
+                
+            Calculates an Omega value for each image in the face class.
+        """
+        for label in self.face_classes:
+            for face in self.face_classes[label]:
+                self.omega_face_classes.append((self.project_to_face_space(face), label))
+        
+    def label_face(self, face):
         """
             Args:
                 face: A face matrix
@@ -161,23 +136,17 @@ class PCA_Classifier:
             Determines label by comparing face to every image in every face class
         """
         omega_new_face = self.project_to_face_space(face)
-        omega_face_classes = []
-        
-        # gather omegas for each image
-        for label in self.face_classes:
-            for face in self.face_classes[label]:
-                omega_face_classes.append((self.project_to_face_space(face), label))
                 
         # find min distance
         distances = []
-        for face, label in omega_face_classes:
-            distances.append((self.distance(face, omega_new_face, metric = distance_metric), label))
+        for face, label in self.omega_face_classes:
+            distances.append((self.distance(face, omega_new_face), label))
         
         min_face = min(distances)
 
         return min_face[1] # return the label
 
-    def classify(self, metric, print_stats = False):
+    def classify(self, print_stats = False):
         """
             Args:
                 directory: where testing images are found
@@ -187,7 +156,7 @@ class PCA_Classifier:
             
             Prints out statistics about the testing set (precision, recall, f)
         """
-        print "Classifying images..."
+        print "Classifying testing set..."
         print
         stats = {}
         labels = self.face_classes.keys()
@@ -205,7 +174,7 @@ class PCA_Classifier:
         
         for path, actual_label in self.test_data:
             face = self.vectorize_image(path)
-            guessed_label = self.label_face(face, metric)
+            guessed_label = self.label_face(face)
             stats[actual_label]['total'] += 1
             total += 1
             if guessed_label == actual_label:
@@ -221,7 +190,7 @@ class PCA_Classifier:
                 tp = stats[label]['tp']
                 fp = stats[label]['fp']
                 fn = stats[label]['fn']
-                if tp+fp>0 and tp+fn>0:
+                if tp + fp > 0 and tp + fn > 0:
                     print label, "statistics:"
                     # Print out stats
                     p = 1.0*tp/(tp+fp)
@@ -246,8 +215,8 @@ class PCA_Classifier:
             Returns:
                 Nothing.
                 
-            Creates training and testing data sets using the
-            labeled images inside the input directory.
+            Creates training and testing datasets using the
+            labeled directories inside the input directory.
         """
         
         print "Creating testing and training data sets..."
@@ -258,23 +227,20 @@ class PCA_Classifier:
         data = {}
         labels = listdir(directory)
     
-        # Find images
-        for l in labels:
-            if re.match("[0-9]", l):
-                data[l] = []
-                for file in listdir(directory + l):
+        # Find images and initialize face classes
+        for label in labels:
+            if re.match("[0-9]", label):
+                self.face_classes[label] = []
+                data[label] = []
+                for file in listdir(directory + label):
                     if re.match("\w+", file):
-                        data[l].append((directory + l + '/' + file, l))
+                        data[label].append((directory + label + '/' + file, label))
         
         # Partition data
-        for l in data:
-            t1, t2 = self.partition(data[l])
+        for label in data:
+            t1, t2 = self.partition(data[label])
             self.train_data += t1
             self.test_data += t2
-            
-        # Initialize face_classes
-        for l in labels:
-            self.face_classes[l] = []
             
         # Add image vectors to appropriate face class
         for path, label in self.train_data:
@@ -288,8 +254,8 @@ class PCA_Classifier:
                 L: the list to partition
                 prop: the proportion of training data required
             Returns:
-                train: a random sublist of L of proportion prop
-                test: a random sublist of L of proportion (1-prop)
+                train: a random sublist of L of size prop*len(L)
+                test: a random sublist of L of size (1-prop)*len(L)
         """
         train = []
         test = []
@@ -317,13 +283,16 @@ def main():
         
     stats = False
     resize = False
+    db = ''
     
-    if '-s' in sys.argv:
-        stats = True
-    if '-r' in sys.argv:
-        resize = True
+    for arg in sys.argv:
+        if arg == '-s':
+            stats = True
+        elif arg == '-r':
+            resize = True
+        else:
+            db = arg
 
-    db = sys.argv[-1]
     if db.endswith('/'):
         db = db[:-1]
     
@@ -335,7 +304,7 @@ def main():
     classifier.partition_data(db)
     classifier.train()
     classifier.save_eigenface_images('efaces_' + db)
-    classifier.classify(EUCLIDEAN, print_stats=stats)
+    classifier.classify(print_stats=stats)
     
 if __name__ == '__main__':
     main()
