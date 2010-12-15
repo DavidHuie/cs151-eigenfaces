@@ -20,7 +20,7 @@ INFINITY = float('infinity')
 
 SAVE_EXT = '.gif'
 
-RESIZE_SIZE = (60, 90)
+RESIZE_SIZE = (90, 60)
 
 TRAIN_PROPORTION = .8
 
@@ -64,12 +64,8 @@ class PCA_Classifier:
         if not path.exists(dir):
             makedirs(dir)
             
-        if self.resize:
-            images = [Image.fromarray(numpy.reshape(i + self.mean_vector, RESIZE_SIZE)) \
-                  for i in self.unnormed_eigenfaces]
-        else:
-            images = [Image.fromarray(numpy.reshape(i + self.mean_vector, self.input_image_dimensions)) \
-                  for i in self.unnormed_eigenfaces]
+        images = [Image.fromarray(numpy.reshape(i + self.mean_vector, self.input_image_dimensions)) \
+              for i in self.unnormed_eigenfaces]
                   
         num = len(images)
         for i in range(1, num + 1):
@@ -101,8 +97,8 @@ class PCA_Classifier:
         
         if self.resize:
             image = image.resize(RESIZE_SIZE)
-            self.input_image_dimensions = RESIZE_SIZE
-        else:
+            
+        if self.input_image_dimensions is None:
             self.input_image_dimensions = (image.size[1], image.size[0])
 
         matrix = numpy.array(image)
@@ -327,7 +323,7 @@ def main():
     if '-r' in sys.argv:
         resize = True
 
-    db = sys.argv[1]
+    db = sys.argv[-1]
     if db.endswith('/'):
         db = db[:-1]
     
