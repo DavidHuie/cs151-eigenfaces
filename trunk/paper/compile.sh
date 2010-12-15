@@ -1,7 +1,10 @@
 #!/bin/bash
 
+if [ -f HRR_facialrec.aux ]
+then
 rm *aux *bbl *blg *log
-./clean.sh
+fi
+
 pdflatex *tex
 bibtex HRR_facialrec
 pdflatex *tex
