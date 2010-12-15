@@ -34,7 +34,43 @@ However, all of these applications have clear deficiencies, most of which come f
 
 One of the challenges of facial recognition is the extraordinarly large space of possible images.  For instance, a $100\times100$ image will have $10\ 000$ pixels. A na\"ive method would be to take an image we want classified and compare it against known images using some notion of distance.  However, given the aforementioned size of the data, this will be a very computationally intensive task.  Instead, Principal Component Analysis (PCA) is used to extract the features with the most amount of variance. Using PCA, one can reduce the space from a dimension of $10\ 000$ to something much more managable, such as 10 or 20 dimensions.  Once these principal components are found, we can project an image to be classified onto the principal components and determine which face it most closely resembles.
 \section{Algorithm}
-The PCA Algorithm begins by taking a two-dimensional matrix representing the image and flattening it into a long one-dimensional vector.  Each vector is then mean-centered.  The algorithm then finds the set of orthonormal vectors which has the largest projection onto the mean-centered vectors. These vectors are given by the eigenvectors of the covariance matrix of $WW^T$, where $W$ is the matrix of the column vectors of the mean-centered images placed next to each other.  The eigenvectors corresponding to the largest eigenvalues will produce the greatest variance.  To classify an image, we project the image onto a selected number of eigenvectors with the largest eigenvalues and then find the distance (Euclidean, Manhattan, or otherwise) to each face class to see which one most closely resembles the image.
+The PCA Algorithm extracts uncorrelated vectors from vectors
+that might be correlated; these uncorrelated vectors are called
+principal components. In more detail, consider a set of mean centered
+vectors $V$. That is, the mean vector is calculated from $V$ and is subtracted from each $v_i \in V$. The PCA Algorithm then returns
+a set $E$ of $M$ eigenvectors $e_i$ such that the quantity
+\begin{math}
+  \lambda_i = \frac{1}{M} \sum_{n=1}^{M}(e_{i}^{T} v_n)^2
+\end{math}
+is maximized. These eigenvectors correspond to the principal
+components for the $v_i$'s.  In practice, the principal components are
+not found using the equation above, but they are instead extracted
+from a covariance matrix created from $V$.  The covariance matrix for
+$V$ would be $C=WW^T$, where $W$ contains the vectors $v \in V$ as
+column vectors. It is then known that the eigenvalues of $C$ are equal to
+the $e_i$'s specified above.
+
+In the context of images, the PCA Algorithm would take in as input a
+matrix $W$, which is composed of a training set of mean centered images $V = \{v_1, v_2, \ldots
+v_m\}$ encoded as
+its column vectors.  This is done by creating a one-dimensional vector
+out of the matrix representation of each image. The set of principal
+component, or eigenvectors, $e_i$ of the covariance matrix for $W$
+represents the training data for a classifier built on PCA.  Given an
+image vector $v_t \notin V$, the image most similar to $v_t$ is found by first
+computing
+\begin{math}
+  \Omega_i = \left[ d_1 d_2 \ldots d_M \right]
+\end{math} 
+with $d_i = e_i^T v_i$ for $. Then, if we minimize
+\begin{math}
+\left| \left| \Omega_t - \Omega_i \right| \right|
+\end{math}
+for all $i$, the $v_i$ corresponding to the minimum belongs to the
+most similar image to $v_t$. For facial recognition purposes, the 
+person represented by $v_t$ would be identified as the person in the
+image $v_i$.
+
 \section{Results}
 As expected, there was a substantial decrease in performance when images were used that altered lighting or face angles.
 % use ~\ref{lighting} to refer to this table number

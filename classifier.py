@@ -75,26 +75,6 @@ class PCA_Classifier:
         for i in range(1, num + 1):
             images[i-1].save(dir + 'eigenface' + str(i) + SAVE_EXT)
 
-
-    def save_eigenfaces(self, filename):
-        with open(filename,'w') as f:
-            p = pickle.Pickler(f)
-            p.dump(self.eigenfaces)
-            p.dump(self.big)
-            p.dump(self.mean_vector)
-            p.dump(self.face_classes)
-
-    def load_eigenfaces(self, filename):
-        with open(filename, 'r') as f:
-            u = pickle.Unpickler(f)
-            self.eigenfaces = u.load()
-            self.big = u.load()
-            self.mean_vector = u.load()
-            self.face_classes = u.load()
-
-    def print_face_classes(self):
-        print self.face_classes
-
     def batch_label_process(self, directory):
         """
             Args: a directory containing folders with images
@@ -240,6 +220,7 @@ class PCA_Classifier:
                 stats[guessed_label]['fp'] += 1
         
         if print_stats:
+            labels.sort()
             for label in labels:
                 tp = stats[label]['tp']
                 fp = stats[label]['fp']
@@ -262,37 +243,58 @@ class PCA_Classifier:
         print
         
     def partition_data(self, directory):
+        """
+            Args:
+                directory: a directory containing folders
+                           corresponding to each image class.
+            Returns:
+                Nothing.
+                
+            Creates training and testing data sets using the
+            labeled images inside the input directory.
+        """
+        
         print "Creating testing and training data sets..."
+        
         if directory[-1] != '/':
             directory = directory + '/'
             
         data = {}
         labels = listdir(directory)
     
+        # Find images
         for l in labels:
-            data[l] = []
-            for file in listdir(directory + l):
-                data[l].append((directory + l + '/' + file, l))
-            
-           
+            if re.match("[0-9]", l):
+                data[l] = []
+                for file in listdir(directory + l):
+                    if re.match("\w+", file):
+                        data[l].append((directory + l + '/' + file, l))
+        
+        # Partition data
         for l in data:
             t1, t2 = self.partition(data[l])
             self.train_data += t1
             self.test_data += t2
             
+        # Initialize face_classes
         for l in labels:
             self.face_classes[l] = []
             
+        # Add image vectors to appropriate face class
         for path, label in self.train_data:
             vector = self.vectorize_image(path)
-            
-            if label in self.face_classes:
-                self.face_classes[label].append(vector)
-            else:
-                self.face_classes[label] = [vector]
+            self.face_classes[label].append(vector)
         
         
     def partition(self, L, prop = TRAIN_PROPORTION):
+        """
+            Args:
+                L: the list to partition
+                prop: the proportion of training data required
+            Returns:
+                train: a random sublist of L of proportion prop
+                test: a random sublist of L of proportion (1-prop)
+        """
         train = []
         test = []
         
@@ -305,32 +307,10 @@ class PCA_Classifier:
             test.append(i)
             
         return train, test
-        
-        
-def partition_test_train(directory):
-    # calc number of images in directory
-    length = 0
-    files = listdir(directory)
-    for file in files:
-        if re.match("\w+", file) and file != 'test' and file != 'train':
-            length += 1
-    test_indexes = []
-    while len(test_indexes) <(length*.2):
-        x = random.randrange(0, length)
-        if not(x in test_indexes):
-            test_indexes.append(x)
-    i = 0
-    for file in files:
-        if re.match("\w+", file) and file != 'test' and file != 'train':
-            if i in test_indexes:
-                shutil.move(directory + '/' + file,  directory + '/' + 'test')
-            else:
-                shutil.move(directory + '/' + file,  directory + '/' + 'train')
-        i += 1
 
 def main():
     """
-    Interface
+    Command line interface
     """
     if len(sys.argv) <= 1:
         print """classifier.py face_db [-r] [-s] 
@@ -347,8 +327,9 @@ def main():
     if '-r' in sys.argv:
         resize = True
 
-
     db = sys.argv[1]
+    if db.endswith('/'):
+        db = db[:-1]
     
     if not path.exists(db):
         print "Incorrect face database."
@@ -359,7 +340,6 @@ def main():
     classifier.train()
     classifier.save_eigenface_images('efaces_' + db)
     classifier.classify(EUCLIDEAN, print_stats=stats)
-    print "Done."
     
 if __name__ == '__main__':
     main()
