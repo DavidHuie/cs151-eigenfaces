@@ -36,9 +36,9 @@ However, all of these applications have clear deficiencies, some of which come f
 
 One of the challenges of facial recognition is the extraordinarily large space of possible images.  For instance, a $100\times100$ image will have $10\ 000$ pixels. A na\"ive method would be to take an image we want classified and compare it against known images using some notion of distance.  However, given the aforementioned size of the data, this will be a very computationally intensive task.  Instead, Principal Component Analysis (PCA) is used to extract the features with the most amount of variance. Using PCA, one can reduce the space from a dimension of $10\ 000$ to something much more manageable, such as 10 or 20 dimensions.  Once these principal components are found, we can project an image to be classified onto the principal components and determine which face it most closely resembles.
 \section{Algorithm}
-The PCA Algorithm extracts uncorrelated vectors from vectors
-that might be correlated; these uncorrelated vectors are called
-principal components. In more detail, consider a set of mean centered
+The PCA Algorithm extracts a set of eigenvectors from a set of vectors $P$ such that the eigenvectors
+decreasingly account for the variance in $P$.
+In more detail, consider a set of mean centered
 vectors $V$. That is, the mean vector is calculated from $V$ and is subtracted from each $v_i \in V$. The PCA Algorithm then returns
 a set $E$ of $M$ eigenvectors $e_i$ such that the quantity
 \begin{math}
