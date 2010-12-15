@@ -57,12 +57,12 @@ its column vectors.  This is done by creating a one-dimensional vector
 out of the matrix representation of each image. The set of principal
 component, or eigenvectors, $e_i$ of the covariance matrix for $W$
 represents the training data for a classifier built on PCA.  Given an
-image vector $v_t \notin V$, the image most similar to $v_t$ is found by first
+image vector $v_t \notin V$, the image most similar to $v_t$, $v_i \in V$, is found by first
 computing
 \begin{math}
   \Omega_i = \left[ d_1 d_2 \ldots d_M \right]
 \end{math} 
-with $d_i = e_i^T v_i$ for $. Then, if we minimize
+with $d_s = e_s^T v_i$ for $i \in \{t\} \cup \{1, 2, \ldots, M \}$. Then, if we minimize
 \begin{math}
 \left| \left| \Omega_t - \Omega_i \right| \right|
 \end{math}
