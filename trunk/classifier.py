@@ -76,6 +76,7 @@ class PCA_Classifier:
         Args: a directory containing folders with images
         Returns: Nothing
         """
+        print "Labeling and vectorizing images..."
         files = listdir(directory)
         for file in files:
             if re.match("\w+", file):
@@ -115,7 +116,7 @@ class PCA_Classifier:
             self.input_image_dimensions = image.size
             
         # Make matrix one-dimensional
-        vector = numpy.array(image).flatten
+        vector = numpy.array(image).flatten()
         return vector
 
     def allow_file(self, filename):
@@ -236,7 +237,7 @@ class PCA_Classifier:
         else:
             return min_group
 
-    def test_classifier(self, directory, metric):
+    def classify(self, directory, metric):
         """
         Args:
             directory: where testing images are found
@@ -327,5 +328,5 @@ def partition_test_train(directory):
 x = PCA_Classifier()
 x.batch_label_process('yalefacesB/train')
 x.train()
-x.test_classifier('yalefacesB/test', EUCLIDEAN)
+x.classify('yalefacesB/test', EUCLIDEAN)
     
