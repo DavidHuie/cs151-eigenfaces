@@ -18,10 +18,23 @@ EIGENFACE_SAVE_EXT = '.gif'
 
 RESIZE_SIZE = (120, 90)
 
+TRIALS = 10
+
 TRAIN_PROPORTION = .8
 
 class PCA_Classifier:
     def __init__(self, resize = False):
+        self.mean_vector = None
+        self.face_classes = {}
+        self.eigenfaces = []
+        self.omega_face_classes = []
+        self.big = None
+        self.input_image_dimensions = None
+        self.resize = resize
+        self.train_data = []
+        self.test_data = []
+        
+    def clear(self):
         self.mean_vector = None
         self.face_classes = {}
         self.eigenfaces = []
@@ -207,6 +220,8 @@ class PCA_Classifier:
         print "Accuracy:", 1.0*correct/total
         print
         
+        return 1.0*correct/total
+        
     def partition_data(self, directory):
         """
             Args:
@@ -278,11 +293,13 @@ def main():
         print """classifier.py face_db [-r] [-s] 
         -r: resize images (for speed)
         -s: print detailed statistics    
+        -t: run 10 trials
         """
         return
         
     stats = False
     resize = False
+    trials = False
     db = ''
     
     for arg in sys.argv:
@@ -290,6 +307,8 @@ def main():
             stats = True
         elif arg == '-r':
             resize = True
+        elif arg == '-t':
+            trials = True
         else:
             db = arg
 
@@ -299,13 +318,24 @@ def main():
     if not path.exists(db):
         print "Incorrect face database."
         return    
-        
-    classifier = PCA_Classifier(resize)
-    classifier.partition_data(db)
-    classifier.train()
-    classifier.save_eigenface_images('efaces_' + db)
-    classifier.classify(print_stats=stats)
     
+    total = 0
+    
+    if trials:
+        for i in range(TRIALS):
+            classifier = PCA_Classifier(resize)
+            classifier.partition_data(db)
+            classifier.train()
+            classifier.save_eigenface_images('efaces_' + db)
+            total += classifier.classify(print_stats=stats)
+        print "Average accuracy for", TRIALS, "trials:", 1.0*total/TRIALS
+    else:
+        classifier = PCA_Classifier(resize)
+        classifier.partition_data(db)
+        classifier.train()
+        classifier.save_eigenface_images('efaces_' + db)
+        classifier.classify(print_stats=stats)
+
 if __name__ == '__main__':
     main()
     
