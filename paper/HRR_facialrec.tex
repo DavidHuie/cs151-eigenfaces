@@ -21,6 +21,7 @@ Alex, Ruch;)
 \author{David Huie \\ Harvey Mudd College \And Dustin Rodrigues \and
 Alex Ruch \\ Pomona College}
 \begin{document}
+\nocite{pca} 
 \nocopyright
 \maketitle
 \begin{abstract}
@@ -35,10 +36,10 @@ One of the challenges of facial recognition is the extraordinarly large space of
 \section{Algorithm}
 The PCA Algorithm begins by taking a two-dimensional matrix representing the image and flattening it into a long one-dimensional vector.  Each vector is then mean-centered.  The algorithm then finds the set of orthonormal vectors which has the largest projection onto the mean-centered vectors. These vectors are given by the eigenvectors of the covariance matrix of $WW^T$, where $W$ is the matrix of the column vectors of the mean-centered images placed next to each other.  The eigenvectors corresponding to the largest eigenvalues will produce the greatest variance.  To classify an image, we project the image onto a selected number of eigenvectors with the largest eigenvalues and then find the distance (Euclidean, Manhattan, or otherwise) to each face class to see which one most closely resembles the image.
 \section{Results}
-Expectedly, there was a substantial decrease in performance when images were used that altered lighting or face angles.
-% use ~\ref{standard} to refer to this table number
+As expected, there was a substantial decrease in performance when images were used that altered lighting or face angles.
+% use ~\ref{lighting} to refer to this table number
 \begin{table}
-\caption{Standard}
+\caption{Lighting}
 \begin{center}
 \label{standard}
 \begin {tabular} {|c|c|c|c|}
@@ -68,70 +69,50 @@ Face 10 &  &  &  \\
 \end {tabular}
 \end{center}
 \end{table}
-% use ~\ref{lighting} to refer to this table number
+% use ~\ref{face_expr} to refer to this table number
 \begin{table}
-\caption{Lighting}
+\caption{Facial Expressions}
 \begin{center}
 \label{lighting}
 \begin {tabular} {|c|c|c|c|}
 \hline
 & \textrm{Precision} & \textrm{Recall} & \textrm{f1}\\
 \hline
-Face 1 &  &  &  \\
+Face 1 & 1.0 &1.0  &1.0  \\
 \hline
-Face 2 &  &  &  \\
+Face 2 & 1.0 &1.0  &1.0  \\
 \hline
-Face 3 &  &  &  \\
+Face 3 & 1.0 &.33  &.5  \\
 \hline
-Face 4 &  &  &  \\
+Face 4 & 1.0 &1.0  &1.0  \\
 \hline
-Face 5 &  &  &  \\
+Face 5 & 1.0 &1.0  &1.0  \\
 \hline
-Face 6 &  &  &  \\
-\hline
-Face 7 &  &  &  \\
-\hline
-Face 8 &  &  &  \\
-\hline
-Face 9 &  &  &  \\
-\hline
-Face 10 &  &  &  \\
-\hline
-\end {tabular}
-\end{center}
-\end{table}
-% use ~\ref{angles} to refer to this table number
-\begin{table}
-\caption{Face Angles}
-\begin{center}
-\label{angles}
-\begin {tabular} {|c|c|c|c|}
-\hline
-& \textrm{Precision} & \textrm{Recall} & \textrm{f1}\\
-\hline
-Face 1 &  &  &  \\
-\hline
-Face 2 &  &  &  \\
-\hline
-Face 3 &  &  &  \\
-\hline
-Face 4 &  &  &  \\
-\hline
-Face 5 &  &  &  \\
-\hline
-Face 6 &  &  &  \\
+Face 6 & 1.0 &1.0  &1.0  \\
 \hline
 Face 7 &  &  &  \\
 \hline
-Face 8 &  &  &  \\
+Face 8 & 1.0 &1.0  &1.0  \\
 \hline
-Face 9 &  &  &  \\
+Face 9 & 1.0 &1.0  &1.0  \\
 \hline
-Face 10 &  &  &  \\
+Face 10 & 1.0 &1.0  &1.0  \\
+\hline
+Face 11 & 1.0 &1.0  &1.0  \\
+\hline
+Face 12 & 1.0 &1.0  &1.0  \\
+\hline
+Face 13 & 1.0 &1.0  &1.0  \\
+\hline
+Face 14 &  &  &  \\
+\hline
+Face 15 & .5 &1.0  &.66  \\
 \hline
 \end {tabular}
 \end{center}
 \end{table}
 \section{Conclusion}
 As our results showed, facial recognition still has a ways to go. Possible areas for further research include testing how well the algorithm performs on other variations of images.  In the real world, people will not all be facing the camera in the same way with the same lighting.  Therefore, PCA is not suitable for general-purpose use, but it still can be used in controlled environments.  There are other facial recognition systems that can better handle these variations in images, yet even the best ones have some deficiencies, whther it be accuracy, time, or space.  Facial recognition is a still-evolving field facing numerous challenges, but it has continued to improve over the years, and hopefully will get better well into the future.
+\bibliographystyle{aaai}
+\bibliography{mybib}
 \end{document}
