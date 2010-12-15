@@ -8,6 +8,7 @@ import re
 import pickle
 import shutil
 import random
+import sys
 
 # constants for various metrics
 EUCLIDEAN = 0
@@ -19,16 +20,20 @@ INFINITY = float('infinity')
 
 SAVE_EXT = '.gif'
 
-RESIZE = True
 RESIZE_SIZE = (60, 90)
 
+TRAIN_PROPORTION = .8
+
 class PCA_Classifier:
-    def __init__(self):
+    def __init__(self, resize = False):
         self.mean_vector = None
         self.face_classes = {}
         self.eigenfaces = []
         self.big = None
         self.input_image_dimensions = None
+        self.resize = resize
+        self.train_data = []
+        self.test_data = []
 
     def train(self):
         '''
@@ -59,7 +64,7 @@ class PCA_Classifier:
         if not path.exists(dir):
             makedirs(dir)
             
-        if RESIZE:
+        if self.resize:
             images = [Image.fromarray(numpy.reshape(i + self.mean_vector, RESIZE_SIZE)) \
                   for i in self.unnormed_eigenfaces]
         else:
@@ -106,22 +111,6 @@ class PCA_Classifier:
                     self.face_classes[label].append(vector)
                 else:
                     self.face_classes[label] = [vector]
-
-    def batch_image_process(self, directory, label):
-        """
-            Args: a directory containing images
-            Returns: A list containing a vector for every image in the
-                     input directory
-        """
-        files = listdir(directory)
-        image_vectors = []
-
-        for file in files:
-            if self.allow_file(file):
-                vector = self.vectorize_image(directory + '/' + file)
-                image_vectors.append(vector)
-
-        self.face_classes[label] = image_vectors
     
     def vectorize_image(self, file_path):
         """
@@ -130,7 +119,7 @@ class PCA_Classifier:
         """
         image = Image.open(file_path)
         
-        if RESIZE:
+        if self.resize:
             image = image.resize(RESIZE_SIZE)
             self.input_image_dimensions = RESIZE_SIZE
         else:
@@ -212,7 +201,7 @@ class PCA_Classifier:
 
         return min_face[1] # return the label
 
-    def classify(self, directory, metric):
+    def classify(self, metric, print_stats = False):
         """
             Args:
                 directory: where testing images are found
@@ -223,9 +212,9 @@ class PCA_Classifier:
             Prints out statistics about the testing set (precision, recall, f)
         """
         print "Classifying images..."
+        print
         stats = {}
         labels = self.face_classes.keys()
-        files = listdir(directory)
                 
         # inititialize stats
         for label in labels:
@@ -238,42 +227,86 @@ class PCA_Classifier:
         correct = 0
         total = 0
         
-        # gather stats
-        for file in files:
-            if re.match("\w+", file):
-                face = self.vectorize_image(directory + '/' + file)
-                guessed_label = self.label_face(face, metric)
-                match = re.search("[1-9][0-9]*", file)
-                actual_label = str(file[match.start():match.end()])
-                
-                stats[actual_label]['total'] += 1
-                total += 1
-                if guessed_label == actual_label:
-                    stats[actual_label]['tp'] +=1
-                    correct += 1
-                else:
-                    stats[actual_label]['fn'] += 1
-                    stats[guessed_label]['fp'] += 1
+        for path, actual_label in self.test_data:
+            face = self.vectorize_image(path)
+            guessed_label = self.label_face(face, metric)
+            stats[actual_label]['total'] += 1
+            total += 1
+            if guessed_label == actual_label:
+                stats[actual_label]['tp'] +=1
+                correct += 1
+            else:
+                stats[actual_label]['fn'] += 1
+                stats[guessed_label]['fp'] += 1
         
-        for label in labels:
-            tp = stats[label]['tp']
-            fp = stats[label]['fp']
-            fn = stats[label]['fn']
-            if tp+fp>0 and tp+fn>0:
-                print label, "statistics:"
-                # Print out stats
-                p = 1.0*tp/(tp+fp)
-                r = 1.0*tp/(tp+fn)
-                f = 2 * (p*r)/(p+r)
-                print "Precision:", p
-                print "Recall:", r
-                print "F-measure:", f
-                print
+        if print_stats:
+            for label in labels:
+                tp = stats[label]['tp']
+                fp = stats[label]['fp']
+                fn = stats[label]['fn']
+                if tp+fp>0 and tp+fn>0:
+                    print label, "statistics:"
+                    # Print out stats
+                    p = 1.0*tp/(tp+fp)
+                    r = 1.0*tp/(tp+fn)
+                    f = 2 * (p*r)/(p+r)
+                    print "Precision:", p
+                    print "Recall:", r
+                    print "F-measure:", f
+                    print
                 
         print "Accuracy Statistics:"
         print "Correct:", correct
         print "Total:", total
         print "Accuracy:", 1.0*correct/total
+        print
+        
+    def partition_data(self, directory):
+        print "Creating testing and training data sets..."
+        if directory[-1] != '/':
+            directory = directory + '/'
+            
+        data = {}
+        labels = listdir(directory)
+    
+        for l in labels:
+            data[l] = []
+            for file in listdir(directory + l):
+                data[l].append((directory + l + '/' + file, l))
+            
+           
+        for l in data:
+            t1, t2 = self.partition(data[l])
+            self.train_data += t1
+            self.test_data += t2
+            
+        for l in labels:
+            self.face_classes[l] = []
+            
+        for path, label in self.train_data:
+            vector = self.vectorize_image(path)
+            
+            if label in self.face_classes:
+                self.face_classes[label].append(vector)
+            else:
+                self.face_classes[label] = [vector]
+        
+        
+    def partition(self, L, prop = TRAIN_PROPORTION):
+        train = []
+        test = []
+        
+        for i in range(int(len(L)*prop)):
+            c = random.choice(L)
+            L.remove(c)
+            train.append(c)
+            
+        for i in L:
+            test.append(i)
+            
+        return train, test
+        
+        
 def partition_test_train(directory):
     # calc number of images in directory
     length = 0
@@ -296,15 +329,36 @@ def partition_test_train(directory):
         i += 1
 
 def main():
-    db = raw_input("Enter a face database: ")
+    """
+    Interface
+    """
+    if len(sys.argv) <= 1:
+        print """classifier.py face_db [-r] [-s] 
+        -r: resize images (for speed)
+        -s: print detailed statistics    
+        """
+        return
+        
+    stats = False
+    resize = False
+    
+    if '-s' in sys.argv:
+        stats = True
+    if '-r' in sys.argv:
+        resize = True
+
+
+    db = sys.argv[1]
+    
     if not path.exists(db):
         print "Incorrect face database."
         return    
-    classifier = PCA_Classifier()
-    classifier.batch_label_process(db + '/train')
+        
+    classifier = PCA_Classifier(resize)
+    classifier.partition_data(db)
     classifier.train()
     classifier.save_eigenface_images('efaces_' + db)
-    classifier.classify(db + '/test', EUCLIDEAN)
+    classifier.classify(EUCLIDEAN, print_stats=stats)
     print "Done."
     
 if __name__ == '__main__':
